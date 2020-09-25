@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<include resource="org/springframework/cloud/gcp/logging/logback-json-appender.xml" />
+	<include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+	<include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+	<appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+		<appender-ref ref="CONSOLE" />
+	</appender>
+
+	<!-- Log Severity with appenders -->
+	<root level="info">
+		<springProfile name="local | test">
+			<appender-ref ref="ASYNC" />
+		</springProfile>
+	</root>
+
+</configuration>

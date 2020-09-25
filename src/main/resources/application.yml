@@ -1,0 +1,19 @@
+server:
+  http2:
+    enabled: true
+
+spring:
+  profiles:
+    active: @spring.profiles.active@
+    
+# Custom Properties #
+weather: 
+  external_weather_api: 
+    appid: d2929e9483efc82c82c32ee7e02d563e
+    host: api.openweathermap.org
+    mode: json
+    path: /data/2.5/forecast
+    scheme: http
+    service-backoff: 100
+    service-retry: 3
+    units: metric

@@ -1,0 +1,218 @@
+---
+  swagger: "2.0"
+  info:
+    title: "ATP Solution APIs"
+    description: "APIs exposed by product ATP (Available To Promise) in OF&D capability as part of modernization initiative to provide items availability"
+    version: "2.0.0"
+    contact:
+      name: "ATP (Order Fulfilment & Delivery)"
+      email: "dl.ofd.atp.se@ingka.com"
+    x-ibm-name: "itemavailability"
+  basePath: "/atp"
+  schemes:
+  - "https"
+  produces:
+  - "application/json;version=1"
+  paths:
+    /api/items/availability:
+      post:
+        tags:
+        - "ItemsAvailability"
+        produces:
+        - "application/json;version=1"
+        description: "Get availability for items as per delivery type provided."
+        operationId: "ITEMS_AVAILABILITY"
+        parameters:
+        - in: "body"
+          name: "request"
+          required: true
+          schema:
+            $ref: "#/definitions/ItemAvailabilityRequest"
+        responses:
+          200:
+            description: "Success"
+            schema:
+              $ref: "#/definitions/ItemAvailabilityResponse"
+          400:
+            description: "Bad request"
+            schema:
+              $ref: "#/definitions/ServiceError"
+          401:
+            description: "Unauthorized"
+            schema:
+              $ref: "#/definitions/AuthorizationError"
+          403:
+            description: "Forbidden"
+            schema:
+              $ref: "#/definitions/AuthorizationError"
+          500:
+            description: "Internal Server Error"
+            schema:
+              $ref: "#/definitions/ServiceError"
+  definitions:
+    ItemAvailabilityRequest:
+      type: "object"
+      required:
+      - "shipToAddress"
+      - "items"
+      properties:
+        shipToAddress:
+          $ref: '#/definitions/ShippingAddress'
+        deliveryType:
+          description: "Transport Delivery type like STANDARD, EXPRESS etc."
+          type: "array"
+          items:
+            type: "string"
+            enum:
+              - STANDARD
+              - CURBSIDE
+              - EXPRESS
+              - EXPRESS_CURBSIDE
+              - LOCKER
+              - PICKUP_POINT
+              - PICKUP_AT_STORE
+        items:
+          description: "Item list for which availability needs to be calculated"
+          type: "array"
+          items:
+            $ref: '#/definitions/Item'
+        businessUnit:
+          $ref: '#/definitions/BusinessUnit'
+    Item:
+      type: "object"
+      required:
+      - "itemType"
+      - "itemNo"
+      - "requiredQty"
+      properties:
+        id:
+          type: "string"
+          description: "Item id"
+        itemType:
+          type: "string"
+          description: "Item type. Eg: ART"
+        itemNo:
+          type: "string"
+          description: "Item number. Eg: 50000875"
+        requiredQty:
+          type: "integer"
+          description: "Item quantity required by consumer"
+    ShippingAddress:
+      type: "object"
+      required:
+      - "country"
+      - "zipCode"
+      properties:
+        country:
+          type: "string"
+          description: "Customer Country code. Eg: For Sweden -> SE"
+        zipCode:
+          type: "string"
+          description: "Customer Zip code. Eg: 25461"
+    BusinessUnit:
+      type: "object"
+      description: "This is not currently used in ATP Step1" 
+      properties:
+        type:
+          type: "string"
+          description: "Fulfilment unit type .Eg: For Stores -> STO"
+        code:
+          type: "string"
+          description: "Fulfilment unit code. Eg: 567"
+    ItemAvailabilityResponse:
+      type: "object"
+      required:
+      - "shipToAddress"
+      - "status"
+      - "itemAvailability"
+      properties:
+        shipToAddress:
+          $ref: '#/definitions/ShippingAddress'
+        status:
+          type: "string"
+          description: "Status of Availability response. Eg: OK, SERVICE_NOT_FOUND, REGION_NOT_FOUND"
+        itemAvailability:
+          type: "array"
+          items:
+            $ref: "#/definitions/ItemAvailability"
+          minItems: 1
+    ItemAvailability:
+      type: "object"
+      required:
+      - "itemType"
+      - "itemNo"
+      - "requiredQty"
+      properties:
+        id:
+          type: "string"
+          description: "Item id"
+        itemType:
+          type: "string"
+          description: "Item type. Eg: ART, SGR, SPR etc."
+        itemNo:
+          type: "string"
+          description: "Item number. Eg: 50000875"
+        requiredQty:
+          type: "integer"
+          description: "Item quantity"
+        status:
+          type: "string"
+          description: "Status of Item response. Eg: OK, ITEM_NOT_FOUND"
+        deliveryTypes:
+          type: "array"
+          items:
+            $ref: "#/definitions/DeliveryType"
+    DeliveryType:
+      type: "object"
+      properties:
+        type:
+          description: "Transport Delivery type like STANDARD, EXPRESS etc."
+          type: "string"
+          enum:
+            - STANDARD
+            - CURBSIDE
+            - EXPRESS
+            - EXPRESS_CURBSIDE
+            - LOCKER
+            - PICKUP_POINT
+            - PICKUP_AT_STORE
+        available:
+          type: "string"
+          enum:
+            - Y
+            - N
+            - NA
+          description: "Flag yo determine if item is available or not. NA flag states its not eligible."
+        availableQty:
+          type: "integer"
+          description: "Quantity of item available"
+    ServiceError:
+      description: "Generic error object when any error occured calling particular service"
+      type: "object"
+      properties:
+        exception:
+          type: "string"
+          format: "string"
+          description: "Name of exception."
+        message:
+          type: "string"
+          description: "Exception message."
+        status:
+          type: "string"
+          description: "HTTP status error."
+        error:
+          type: "string"
+          description: "Detailed error message, may contain debug logs for internal use"
+    AuthorizationError:
+      description: "Error object when authorization fails like expired jwt token"
+      type: "object"
+      properties:
+        httpCode:
+          type: "string"
+          description: "HTTP status error code."
+        httpMessage:
+          type: "string"
+          description: "Error message."
+        moreInformation:
+          type: "string"
+          description: "Detailed error message, may contain debug logs for internal use"
